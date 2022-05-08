@@ -13,10 +13,11 @@ class NetworkFixVlans extends Migration
         $capsule = new Capsule();
         
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
-            // Limit index to 750
-            $table->index([DB::raw('vlans(750)')]);
+            // DROP index
+            $table->dropIndex('vlans');
             // Then change to TEXT
             $table->text('vlans')->change();
+            // Now add an index again?
         });
     }
 
