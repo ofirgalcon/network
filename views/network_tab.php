@@ -5,7 +5,7 @@
 
 <script>
 $(document).on('appReady', function(){
-	$.getJSON(appUrl + '/module/network/get_tab_data/' + serialNumber, function(data){
+    $.getJSON(appUrl + '/module/network/get_tab_data/' + serialNumber, function(data){
         if( ! data ){
             // Change loading message to no data
             $('#network-msg').text(i18n.t('no_data'));
@@ -49,6 +49,9 @@ $(document).on('appReady', function(){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>DHCP</td></tr>';
                         } else if(d[prop] == "bootp"){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>BOOTP</td></tr>';
+                        } else if(prop == "wireless_card_type" && d[prop] == "spairport_wireless_card_type_wifi"){
+                           // Apple Silicon Macs report this differently
+                           rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>Wi-Fi</td></tr>';
                             
                         // Boolean Values
                         } else if((prop == 'overrideprimary' || prop == 'ipv6coverrideprimary' || prop == 'airdrop_supported' || prop == 'wow_supported')&& d[prop] == "1"){
@@ -231,7 +234,7 @@ $(document).on('appReady', function(){
                                     .append(rows))))
                 }
             })
-        }
-	});
+        }    
+    });
 });
 </script>
