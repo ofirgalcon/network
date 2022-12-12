@@ -1,5 +1,5 @@
-#!/usr/local/munkireport/munkireport-python2
-# Script is Python 3 compatiable
+#!/usr/local/munkireport/munkireport-python3
+# Script is Python 2 compatiable
 
 import os
 import subprocess
