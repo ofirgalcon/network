@@ -139,7 +139,7 @@ def get_network_info():
         out.append(device)
         
         # Run ifconfig so we only have to run it once
-        ifconfig_data = bashCommand(['/sbin/ifconfig']).decode().split('\n')
+        ifconfig_data = bashCommand(['/sbin/ifconfig']).decode("utf-8", errors="ignore").split('\n')
         
     # Check for and add bond, tuns, and vmnets
     out = out + get_bond_info(ifconfig_data) + get_tunnel_info(ifconfig_data) + get_vmnet_info(ifconfig_data)
@@ -166,21 +166,21 @@ def get_network_locations():
 
 def get_additional_info(interface):
     network = {}
-    mtudata = bashCommand(['/usr/sbin/networksetup', '-getMTU', interface]).decode()
+    mtudata = bashCommand(['/usr/sbin/networksetup', '-getMTU', interface]).decode("utf-8", errors="ignore")
     if "Current Setting" in mtudata and "Error: The parameters were not valid" not in mtudata:
         network["activemtu"] = re.sub('[^0-9]','', re.sub("[\(\[].*?[\)\]]", "", mtudata))
     else:
         return network
 
-    current_media = re.sub('Current: ','',''.join(bashCommand(['/usr/sbin/networksetup', '-getmedia', interface]).decode().split('\n')[:1])).strip()
+    current_media = re.sub('Current: ','',''.join(bashCommand(['/usr/sbin/networksetup', '-getmedia', interface]).decode("utf-8", errors="ignore").split('\n')[:1])).strip()
     if current_media != "" and "Could not find hardware port or device named" not in current_media:
         network["currentmedia"] = current_media
 
-    vlan_data = re.sub("There are no VLANs currently configured on this system.","",re.sub('\n',', ',bashCommand(['/usr/sbin/networksetup', '-listVLANs']).decode()))[:-2]
+    vlan_data = re.sub("There are no VLANs currently configured on this system.","",re.sub('\n',', ',bashCommand(['/usr/sbin/networksetup', '-listVLANs']).decode("utf-8", errors="ignore")))[:-2]
     if vlan_data != "":
         network["vlans"] = vlan_data
 
-    validmtudata = bashCommand(['/usr/sbin/networksetup', '-listvalidMTUrange', interface]).decode()
+    validmtudata = bashCommand(['/usr/sbin/networksetup', '-listvalidMTUrange', interface]).decode("utf-8", errors="ignore")
     if "Valid MTU Range:" in validmtudata and "Error: The parameters were not valid" not in validmtudata:
         network["validmturange"] = re.sub('Valid MTU Range: ','', validmtudata)
     
@@ -194,7 +194,7 @@ def get_external_ip():
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (output, unused_error) = proc.communicate()
     try:
-        return output.decode()
+        return output.decode("utf-8", errors="ignore")
     except Exception:
         return ""
     
@@ -208,7 +208,7 @@ def get_bond_info(ifconfig_data):
             if "bond" in bond_adapter and ": flags=" in bond_adapter:
                 adapter = bond_adapter.split(': flags=')[0].strip()
                 bond = {'status':0}
-                bond_ip = bashCommand(['/sbin/ifconfig', adapter]).decode()
+                bond_ip = bashCommand(['/sbin/ifconfig', adapter]).decode("utf-8", errors="ignore")
                 bond_lines = bond_ip.split('\n')
 
                 for bond_line in bond_lines:
@@ -243,7 +243,7 @@ def get_tunnel_info(ifconfig_data):
                 adapter = utun_adapter.split(': flags=')[0].strip()
 
                 utun = {}
-                utun_ip = bashCommand(['/sbin/ifconfig', adapter]).decode()
+                utun_ip = bashCommand(['/sbin/ifconfig', adapter]).decode("utf-8", errors="ignore")
                 utun_lines = utun_ip.split('\n')
 
                 for utun_line in utun_lines:
@@ -273,7 +273,7 @@ def get_vmnet_info(ifconfig_data):
                 adapter = vmnet_adapter.split(': flags=')[0].strip()
 
                 vmnet = {'service':adapter}
-                vmnet_ip = bashCommand(['/sbin/ifconfig', adapter]).decode()
+                vmnet_ip = bashCommand(['/sbin/ifconfig', adapter]).decode("utf-8", errors="ignore")
                 vmnet_lines = vmnet_ip.split('\n')
 
                 for vmnet_line in vmnet_lines:
@@ -293,7 +293,7 @@ def get_vmnet_info(ifconfig_data):
 
 def get_airport_info():
 
-    output =  bashCommand(['/usr/sbin/system_profiler', 'SPAirPortDataType', '-xml', '-timeout', '8.4']).decode()
+    output =  bashCommand(['/usr/sbin/system_profiler', 'SPAirPortDataType', '-xml', '-timeout', '8.4']).decode("utf-8", errors="ignore")
 
     try:
         try:
