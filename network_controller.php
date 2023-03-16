@@ -76,7 +76,7 @@ class Network_controller extends Module_controller
             foreach ($value as $k => $v) {
                 $when_str .= sprintf(" WHEN ipv4router LIKE '%s%%' THEN 1", $v);
             }
-            $sel_arr[] = "SUM(CASE $when_str ELSE 0 END) AS r${cnt}";
+            $sel_arr[] = "SUM(CASE $when_str ELSE 0 END) AS r{$cnt}";
             $cnt++;
         }
         $sql = "SELECT " . implode(', ', $sel_arr) . " FROM network
