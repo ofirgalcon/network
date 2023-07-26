@@ -1,6 +1,6 @@
 <div class="col-lg-12">
 	<div class="card" id="network-vlan-widget">
-		<div class="card-heading">
+		<div class="card-header">
 			<i class="fa fa-globe"></i>
 			<span data-i18n="network.widget.network_vlan"></span>
 			<a href="/show/listing/network/network" class="pull-right"><i class="fa fa-list"></i></a>

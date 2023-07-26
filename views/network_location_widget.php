@@ -1,6 +1,6 @@
 <div class="col-md-4">
 	<div class="card">
-		<div class="card-heading">
+		<div class="card-header">
 			<i class="fa fa-globe"></i>
 			<span data-i18n="network.widget.network_location"></span>
 			<a href="/show/listing/network/network" class="pull-right"><i class="fa fa-list"></i></a>
