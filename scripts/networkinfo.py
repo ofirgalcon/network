@@ -213,20 +213,20 @@ def get_bond_info(ifconfig_data):
 
                 for bond_line in bond_lines:
                     if "inet" in bond_line and "inet6" not in bond_line:
-                        bond['ipv4ip'] = ''.join(re.sub('   inet ','',bond_line).split(' ')[0]).strip()
+                        bond['ipv4ip'] = ''.join(re.sub('inet ','',bond_line.strip()).split(' ')[0]).strip()
                         bond['service'] = adapter
                         bond['status'] = 1
                     elif "inet6" in bond_line and "fe80::" not in bond_line:
-                        bond['ipv6ip'] = ''.join(re.sub('   inet6 ','',bond_line).split(' ')[0]).strip()
+                        bond['ipv6ip'] = ''.join(re.sub('inet6 ','',bond_line.strip()).split(' ')[0]).strip()
                         bond['service'] = adapter
                         bond['status'] = 1
                     elif "ether" in bond_line:
-                        bond['ethernet'] = re.sub(' ether ','',bond_line).split(' ')[0].strip().upper()
+                        bond['ethernet'] = re.sub('ether ','',bond_line.strip()).split(' ')[0].strip().upper()
                     elif "mtu" in bond_line:
                         bond["activemtu"] = re.sub('[^0-9]','', bond_line.split(' mtu ')[-1])
                     elif "media: " in bond_line:
                         bond['activemedia'] = re.sub('\)','', re.sub('\(','left_para', bond_line).split('left_para')[1]) # tbase
-                        bond['currentmedia'] = re.sub(' media:','', bond_line.split(' ')[1]) # autoselect
+                        bond['currentmedia'] = re.sub('media:','', bond_line.strip().split(' ')[1]) # autoselect
                 bonds.append(bond)
         return [_f for _f in bonds if _f]
 
@@ -248,13 +248,13 @@ def get_tunnel_info(ifconfig_data):
 
                 for utun_line in utun_lines:
                     if "inet" in utun_line and "inet6" not in utun_line:
-                        utun['ipv4ip'] = ''.join(re.sub('   inet ','',utun_line).split(' ')[0]).strip()
+                        utun['ipv4ip'] = ''.join(re.sub('inet ','',utun_line.strip()).split(' ')[0]).strip()
                         utun['service'] = adapter
                     elif "inet6" in utun_line and "fe80::" not in utun_line:
-                        utun['ipv6ip'] = ''.join(re.sub('   inet6 ','',utun_line).split(' ')[0]).strip()
+                        utun['ipv6ip'] = ''.join(re.sub('inet6 ','',utun_line.strip()).split(' ')[0]).strip()
                         utun['service'] = adapter
                     elif "ether" in utun_line:
-                        utun['ethernet'] = re.sub(' ether ','',utun_line).split(' ')[0].strip().upper()
+                        utun['ethernet'] = re.sub('ether ','',utun_line.strip()).split(' ')[0].strip().upper()
 
                 utuns.append(utun)
 
@@ -269,7 +269,7 @@ def get_vmnet_info(ifconfig_data):
         vmnets = []
         
         for vmnet_adapter in vmnet_adapters:
-            if "vmnet" in vmnet_adapter:
+            if ("vmnet" in vmnet_adapter or "vmenet" in vmnet_adapter) and "member: " not in vmnet_adapter:
                 adapter = vmnet_adapter.split(': flags=')[0].strip()
 
                 vmnet = {'service':adapter}
@@ -278,11 +278,11 @@ def get_vmnet_info(ifconfig_data):
 
                 for vmnet_line in vmnet_lines:
                     if "inet" in vmnet_line and "inet6" not in vmnet_line:
-                        vmnet['ipv4ip'] = ''.join(re.sub('  inet ','',vmnet_line).split(' ')[0]).strip()
+                        vmnet['ipv4ip'] = ''.join(re.sub('inet ','',vmnet_line.strip()).split(' ')[0]).strip()
                     elif "inet6" in vmnet_line and "fe80::" not in vmnet_line:
-                        vmnet['ipv6ip'] = ''.join(re.sub('  inet6 ','',vmnet_line).split(' ')[0]).strip()
+                        vmnet['ipv6ip'] = ''.join(re.sub('inet6 ','',vmnet_line.strip()).split(' ')[0]).strip()
                     elif "ether" in vmnet_line:
-                        vmnet['ethernet'] = re.sub('    ether ','',vmnet_line).split(' ')[0].strip().upper()
+                        vmnet['ethernet'] = re.sub('ether ','',vmnet_line.strip()).split(' ')[0].strip().upper()
                         
                 vmnets.append(vmnet)
         return vmnets
