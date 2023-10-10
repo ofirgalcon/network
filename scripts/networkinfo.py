@@ -8,6 +8,8 @@ import plistlib
 import socket, struct
 import re
 
+from Foundation import CFPreferencesCopyAppValue
+
 def get_network_info():
     '''Uses system profiler to get info about the network'''
     output = bashCommand(['/usr/sbin/system_profiler', 'SPNetworkDataType', '-xml'])
@@ -187,8 +189,12 @@ def get_additional_info(interface):
     return network
         
 def get_external_ip():
-    
-    cmd = ['/usr/bin/curl', '--connect-timeout', '5', 'https://api.ipify.org']
+    ip_address_server = str(get_pref_value('IpAddressServer', 'MunkiReport'))
+
+    if len(ip_address_server) == 0:
+        ip_address_server = "https://api.ipify.org"
+
+    cmd = ['/usr/bin/curl', '--connect-timeout', '5', ip_address_server]
     proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
                             stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
