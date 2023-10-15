@@ -50,6 +50,17 @@ Link-local:
     - 169.254.%
 ```
 
+### IP Address Server
+
+Some organisations may not be keen on Munkireport using [ipify](https://ipify.org), as it is also commonly used by malware. You can specify a custom server for getting a clients public IP using Munkireport's global preferences with the `IpAddressServer` key:
+```bash
+defaults write /Library/Preferences/MunkiReport.plist IpAddressServer 'https://myserver.example/'
+```
+
+This custom server should return only an IP address in response to a curl request. You can see an example of what this module expects with the following command:
+```bash
+curl -s https://api.ipify.org
+```
 
 Table Schema
 -----
