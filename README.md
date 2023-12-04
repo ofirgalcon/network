@@ -52,7 +52,7 @@ Link-local:
 
 ### IP Address Server
 
-Some organisations may not be keen on Munkireport using [ipify](https://ipify.org), as it is also commonly used by malware. You can specify a custom server for getting a clients public IP using Munkireport's global preferences with the `IpAddressServer` key:
+Some organisations may not be keen on MunkiReport using [ipify](https://ipify.org), as it is also commonly used by malware. You can specify a custom server for getting a clients public IP using Munkireport's global preferences with the `IpAddressServer` key:
 ```bash
 defaults write /Library/Preferences/MunkiReport.plist IpAddressServer 'https://myserver.example/'
 ```
@@ -84,7 +84,7 @@ Table Schema
 * currentmedia (string) Current network media
 * activemedia (string) Active network media
 * searchdomain (string) Search domain
-* externalip (string) External IP address
+* externalip (string) External IP address (IPv4 only)
 * ipv4switchmacaddress (string) MAC address of switch's port
 * ipv4destaddresses (string) Router's IP address
 * vpnservername (string) VPN URI

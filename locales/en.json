@@ -1,5 +1,5 @@
 {
-    "ethernet": "Ethernet",
+    "ethernet": "MAC Address",
     "hostname": "Hostname",
     "ip_address": "IP Address",
     "automatic": "Automatic",
@@ -17,6 +17,7 @@
     "currentmedia": "Current Media",
     "activemtu": "Active MTU",
     "validmturange": "Supported MTU Range",
+    "active_service": "Active Network Service",
     "service": "Service",
     "order": "Service Order",
     "status": "Status",

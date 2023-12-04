@@ -18,6 +18,7 @@ $(document).on('appReady', function(){
             // Update the tab badge count
             $('#network-cnt').text(data.length);
             var skipThese = ['service'];
+            var clientDetail = "";
             $.each(data, function(i,d){
 
                 // Generate rows from data
@@ -58,6 +59,70 @@ $(document).on('appReady', function(){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+i18n.t('yes')+'</td></tr>';
                         } else if((prop == 'overrideprimary' || prop == 'ipv6coverrideprimary' || prop == 'airdrop_supported' || prop == 'wow_supported')&& d[prop] == "0"){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+i18n.t('no')+'</td></tr>';
+
+                        // Append to the client detail, only if it is an active network service and we've not already appeneded the data
+                        } else if(d["status"] == "1" && ((prop == "ipv4ip" || prop == "ipv4dns" || prop == "ipv6ip" || prop == "ipv6dns" || prop == "ethernet"|| prop == "externalip") && ! clientDetail.includes(prop))){
+                           rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+d[prop]+'</td></tr>';
+
+                           clientDetail = clientDetail + prop
+
+                           // Only show IP address and DNS for first active service
+                           if (prop == "ipv4ip" && d["ipv6ip"] == null){
+                               clientDetail = clientDetail + "ipv6ip"
+                           }
+                           if (prop == "ipv6ip" && d["ipv4ip"] == null){
+                               clientDetail = clientDetail + "ipv4ip"
+                           }
+                           if (prop == "ipv4dns" && d["ipv6ip"] == null){
+                               clientDetail = clientDetail + "ipv6ip"
+                           }
+                           if (prop == "ipv6ip" && d["ipv4dns"] == null){
+                               clientDetail = clientDetail + "ipv4dns"
+                           }
+
+                           // Update the network icon on the client detail
+                           if (prop == "ipv4ip" || prop == "ipv6ip"){
+
+                               if (d["service"].includes("Wi-Fi") || d["service"].includes("AirPort")){
+                                   $('.fa.fa-sitemap')
+                                       .addClass("fa fa-wifi")
+                                   $('.fa.fa-fa-sitemap') // This is the broken reportdata client detail
+                                       .addClass("fa fa-wifi")
+                               } else if (d["service"].includes("Ethernet")){
+                                   $('.fa.fa-sitemap')
+                                       .addClass("fa fa-indent fa-rotate-270")
+                                   $('.fa.fa-fa-sitemap') // This is the broken reportdata client detail
+                                       .addClass("ffa fa-indent fa-rotate-270")
+                               } else if (d["service"].includes("iPhone") || d["service"].includes("phone")){
+                                   $('.fa.fa-sitemap')
+                                       .addClass("fa fa-mobile")
+                                   $('.fa.fa-fa-sitemap') // This is the broken reportdata client detail
+                                       .addClass("fa fa-mobile")
+                               } else{
+                                   $('.fa.fa-fa-sitemap') // This is the broken reportdata client detail
+                                       .addClass("fa fa-sitemap") // We're going to fix it by setting the default here
+                               }
+
+                               // Only include first active service
+                               if (! clientDetail.includes("service")){
+                                   clientDetail = clientDetail + "service"
+
+                                   // Add the active network service to the client detail
+                                   $('.machine-hostname').parent().parent().parent()
+                                   .append($('<tr>')
+                                       .append($('<th>')
+                                           .append(i18n.t('network.active_service')))
+                                       .append($('<td>')
+                                           .append(d["service"])))
+                               }
+                           }
+
+                           $('.machine-hostname').parent().parent().parent()
+                           .append($('<tr>')
+                               .append($('<th>')
+                                   .append(i18n.t('network.'+prop)))
+                               .append($('<td>')
+                                   .append(d[prop])))
                             
                         } else {
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+d[prop]+'</td></tr>';
@@ -66,7 +131,7 @@ $(document).on('appReady', function(){
                 }
 
                 // Generate table
-                if (d.service.indexOf("Wi-Fi") !=-1 || d.service.indexOf("AirPort") !=-1){
+                if (d.service.includes("Wi-Fi") || d.service.includes("AirPort")){
                     $('#network-tab')
                         .append($('<h4>')
                         .append($('<a href="#tab_wifi-tab">')
@@ -78,7 +143,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("Ethernet") !=-1){
+                } else if (d.service.includes("Ethernet")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -89,7 +154,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("iPhone") !=-1 || d.service.indexOf("phone") !=-1){
+                } else if (d.service.includes("iPhone") || d.service.includes("phone")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -100,7 +165,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("iPad") !=-1 || d.service.indexOf("ablet") !=-1){
+                } else if (d.service.includes("iPad") || d.service.includes("ablet")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -111,7 +176,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("utun") !=-1){
+                } else if (d.service.includes("utun")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -122,7 +187,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("Serial") !=-1){
+                } else if (d.service.includes("Serial")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -133,7 +198,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("vmnet") !=-1){
+                } else if (d.service.includes("vmnet")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -144,7 +209,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("bond") !=-1){
+                } else if (d.service.includes("bond")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -155,7 +220,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("Bluetooth") !=-1){
+                } else if (d.service.includes("Bluetooth")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -166,7 +231,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("odem") !=-1){
+                } else if (d.service.includes("odem")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -177,7 +242,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("Thunderbolt") !=-1){
+                } else if (d.service.includes("Thunderbolt")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -188,7 +253,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("USB") !=-1){
+                } else if (d.service.includes("USB")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -199,7 +264,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("FireWire") !=-1){
+                } else if (d.service.includes("FireWire")){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')
@@ -210,7 +275,7 @@ $(document).on('appReady', function(){
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
                                     .append(rows))))
-                } else if (d.service.indexOf("VPN") !=-1 || ("vpnservername" in d && d.vpnservername !== null)){
+                } else if (d.service.includes("VPN") || ("vpnservername" in d && d.vpnservername !== null)){
                     $('#network-tab')
                         .append($('<h4>')
                             .append($('<i>')

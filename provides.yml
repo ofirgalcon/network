@@ -1,0 +1,18 @@
+client_tabs:
+    network-tab:
+        view: network_tab
+        i18n: network.network
+        badge: network-cnt
+listings:
+    network:
+        view: network_listing
+        i18n: network.network
+reports:
+    network:
+        view: network
+        i18n: network.report
+widgets:
+    network_location:
+        view: network_location_widget
+    network_vlan:
+        view: network_vlan_widget

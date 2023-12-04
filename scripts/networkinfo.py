@@ -1,14 +1,16 @@
 #!/usr/local/munkireport/munkireport-python3
-# Script is Python 2 compatiable
 
 import os
 import subprocess
 import sys
 import plistlib
-import socket, struct
 import re
 
 from Foundation import CFPreferencesCopyAppValue
+
+sys.path.insert(0, '/usr/local/munkireport')
+from munkilib.purl import Purl
+from Foundation import NSHTTPURLResponse
 
 def get_network_info():
     '''Uses system profiler to get info about the network'''
@@ -42,6 +44,23 @@ def get_network_info():
         for item in obj:
             if item == '_name':
                 device['service'] = obj[item]
+                if device['service'] == "Wi-Fi" or device['service'] == "AirPort":
+
+                    try:
+                        cmd = ['/usr/libexec/airportd', 'info']
+                        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                                                stdin=subprocess.PIPE,
+                                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        (output, unused_error) = proc.communicate()
+                        output = output.decode("utf-8", errors="ignore")
+
+                        for line in output.split('\n'):
+                            if "Active PHY: " in line:
+                                device['activemedia'] = line.replace("Active PHY: ","").strip()
+                                break
+                    except Exception:
+                        pass
+
             elif item == 'ip_address':
                 device['status'] = 1
             elif item == 'interface':
@@ -194,13 +213,8 @@ def get_external_ip():
     if len(ip_address_server) == 0:
         ip_address_server = "https://api.ipify.org"
 
-    cmd = ['/usr/bin/curl', '--connect-timeout', '5', ip_address_server]
-    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, unused_error) = proc.communicate()
     try:
-        return output.decode("utf-8", errors="ignore")
+        return curl(ip_address_server).decode("utf-8", errors="ignore")
     except Exception:
         return ""
     
@@ -296,7 +310,6 @@ def get_vmnet_info(ifconfig_data):
     except:
         return []
 
-
 def get_airport_info():
 
     output =  bashCommand(['/usr/sbin/system_profiler', 'SPAirPortDataType', '-xml', '-timeout', '8.4']).decode("utf-8", errors="ignore")
@@ -351,6 +364,66 @@ def bashCommand(script):
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (output, unused_error) = proc.communicate()
     return output
+
+def hide_curl_log(msg, *args):
+    # Empty function to hide curl log output
+    pass
+
+def curl(url):
+    # Curl function lovely copied from reportcommon.py 
+
+    options = dict()
+    options["url"] = url
+    options["logging_function"] = hide_curl_log # Local function to suppress messages
+    options["connection_timeout"] = 5 # Set connection timeout
+    options["follow_redirects"] = False # Set follow_redirects
+
+    # Build Purl with initial settings
+    connection = Purl.alloc().initWithOptions_(options)
+    connection.start()
+    try:
+        while True:
+            # if we did `while not connection.isDone()` we'd miss printing
+            # messages if we exit the loop first
+            if connection.isDone():
+                break
+
+    except (KeyboardInterrupt, SystemExit):
+        # safely kill the connection then re-raise
+        connection.cancel()
+        raise
+    except Exception as err:  # too general, I know
+        # Let us out! ... Safely! Unexpectedly quit dialogs are annoying...
+        connection.cancel()
+        # Re-raise the error as a GurlError
+        print("Error: -1 "+connection.error.localizedDescription())
+        return ""
+
+    if connection.error != None:
+        # Gurl returned an error
+        if connection.SSLerror:
+            print("SSL error detail: %s", str(connection.SSLerror))
+        print("Error: "+ str(connection.error.code()), connection.error.localizedDescription())
+        return ""
+
+    if connection.response != None and connection.status != 200:
+        print("Status: %s", connection.status)
+        print("Headers: %s", connection.headers)
+    if connection.redirection != []:
+        print("Redirection: %s", connection.redirection)
+
+    connection.headers["http_result_code"] = str(connection.status)
+    description = NSHTTPURLResponse.localizedStringForStatusCode_(connection.status)
+    connection.headers["http_result_description"] = description
+
+    if str(connection.status).startswith("2"):
+        return connection.get_response_data()
+    else:
+        # there was an HTTP error of some sort.
+        print(connection.status, "%s failed, HTTP returncode %s (%s)"
+            % (url, connection.status, connection.headers.get("http_result_description", "Failed"),),
+        )
+        return ""
 
 def merge_two_dicts(x, y):
     z = x.copy()

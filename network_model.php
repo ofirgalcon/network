@@ -23,6 +23,7 @@ class Network_model extends \Model
         $this->rs['ipv6prefixlen'] = 0; // IPv6 prefix length as int
         $this->rs['ipv6router'] = '';  // IPv6 router address as string
         $this->rs['ipv4dns'] = '';  // IPv4 DNS address(es) as string
+        $this->rs['externalip'] = '';  // External IP address as string
         $this->rs['vlans'] = '';  // VLANs on service as string
         $this->rs['activemtu'] = 0;  // Active MTU as int
         $this->rs['validmturange'] = '';  // Range of valid MTUs as string
@@ -73,9 +74,9 @@ class Network_model extends \Model
     {
         // If data is empty, throw error
         if (! $data) {
-            throw new Exception("Error Processing Time Machine Module Request: No data found", 1);
+            throw new Exception("Error Processing Network Module Request: No data found", 1);
         } else if (substr( $data, 0, 30 ) != '<?xml version="1.0" encoding="' ) { // Else if old style text, process with old text based handler
-            
+
             // Translate network strings to db fields
             $translate = array(
                 'Ethernet Address: ' => 'ethernet',
@@ -157,32 +158,43 @@ class Network_model extends \Model
                     $this->save();
                 }
             }
-            
+
         } else { // Else process with new XML handler
-            
+
             // Delete previous entries
             $this->deleteWhere('serial_number=?', $this->serial_number);
-            
+
             // Process incoming network_info.plist
             $parser = new CFPropertyList();
             $parser->parse($data);
             $plist = $parser->toArray();
-            
+
             // Process each service
             foreach ($plist as $service) {
-                foreach (array('service', 'order', 'status', 'ethernet', 'clientid', 'ipv4conf', 'ipv4ip', 'ipv4mask', 'ipv4router', 'ipv6conf', 'ipv6ip', 'ipv6prefixlen', 'ipv6router', 'ipv4dns', 'vlans', 'activemtu', 'validmturange', 'currentmedia', 'activemedia', 'searchdomain', 'ipv4switchmacaddress', 'ipv4destaddresses', 'vpnservername', 'vpnserveraddress', 'overrideprimary', 'ipv6clientid', 'ipv6destaddresses', 'ipv6switchmacaddress', 'ipv6vpnservername', 'ipv6coverrideprimary', 'ipv6vpnserveraddress', 'dhcp_domain_name', 'dhcp_domain_name_servers', 'dhcp_lease_duration', 'dhcp_routers', 'dhcp_server_identifier', 'dhcp_subnet_mask', 'bsd_interface', 'netbiosname', 'workgroup', 'location', 'airdrop_channel', 'airdrop_supported', 'wow_supported', 'supported_channels', 'supported_phymodes', 'wireless_card_type', 'wireless_card_type', 'firmware_version', 'country_code', 'wireless_locale') as $item) {
+
+                // Add the serial mumber to each entry
+                $service['serial_number'] = $this->serial_number;
+
+                foreach ($this->rs as $key => $value) {
+
                     // If key does not exist in $service, null it
-                    if ( ! array_key_exists($item, $service) || $service[$item] == '' && $service[$item] != '0') {
-                        $this->$item = null;
+                    if ( ! array_key_exists($key, $service) || $service[$key] == '' && $service[$key] != '0') {
+                        $this->rs[$key] = null;
 
                     // IPv6 IP address can be long arrays
-                    } else if ($item == 'ipv6ip' && strpos($service[$item], ',') !== false) {
-                        $ipv6_array = explode(",", $service[$item]);
-                        $this->$item = $ipv6_array[0];
+                    } else if ($key == 'ipv6ip' && strpos($service[$key], ',') !== false) {
+                        $ipv6_array = explode(",", $service[$key]);
+                        $this->rs[$key] = $ipv6_array[0];
+
+                    // Only process external IP address if it is an IPv4 address
+                    } else if ($key == 'externalip') {
+                        if (substr_count($service[$key],".") == 3){
+                            $this->rs[$key] = $service[$key];
+                        }
 
                     // Set the db fields to be the same as those in service
                     } else {
-                        $this->$item = $service[$item];
+                        $this->rs[$key] = $service[$key];
                     }
                 }
 
