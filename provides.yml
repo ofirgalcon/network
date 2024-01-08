@@ -8,8 +8,8 @@ listings:
         view: network_listing
         i18n: network.network
 reports:
-    network:
-        view: network
+    network_report:
+        view: network_report
         i18n: network.report
 widgets:
     network_location:

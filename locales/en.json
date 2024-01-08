@@ -26,7 +26,7 @@
     "ipv4ip": "IPv4 IP Address",
     "ipv4mask": "IPv4 Subnet Mask",
     "ipv4router": "IPv4 Router",
-    "ipv4dns": "IPv4 DNS",
+    "ipv4dns": "DNS",
     "ipv6conf": "IPv6 Configuration",
     "ipv6ip": "IPv6 IP Address",
     "ipv6prefixlen": "IPv6 Prefix Length",

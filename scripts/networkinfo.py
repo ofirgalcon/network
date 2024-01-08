@@ -26,20 +26,20 @@ def get_network_info():
         items = sp_dict['_items']
     except Exception:
         return {}
-    
+
     # Get network locations
     network_locations = get_network_locations()
-    
+
     # Get external IP only once
     external_ip = get_external_ip()
-    
+
     # Make sure Airport is only scanned once
     # Alternatively, set this to 1 to disable Airport scanning and create a new client package
     # Useful if you keep getting timeouts on this script
     airport_scanned = 0
-    
+
     out = []
-    for obj in items:        
+    for obj in items:
         device = {'status':0}
         for item in obj:
             if item == '_name':
@@ -137,12 +137,12 @@ def get_network_info():
                     device['dhcp_server_identifier'] = obj[item]["dhcp_server_identifier"]
                 if "dhcp_subnet_mask" in obj[item]:
                     device['dhcp_subnet_mask'] = obj[item]["dhcp_subnet_mask"]
-        
+
         # Add in additional network info and external IP address if active
         if device['status'] == 1:
             device = merge_two_dicts(device, get_additional_info(device['bsd_interface']))
             device['externalip'] = external_ip
-        
+
             # Add in location information to network device only if active
             for location in network_locations:
                 if location["spnetworklocation_isActive"] == "yes":
@@ -156,17 +156,17 @@ def get_network_info():
                             device['location'] = location["_name"]
                             break
                     break
-            
+
         out.append(device)
-        
+
         # Run ifconfig so we only have to run it once
         ifconfig_data = bashCommand(['/sbin/ifconfig']).decode("utf-8", errors="ignore").split('\n')
-        
+
     # Check for and add bond, tuns, and vmnets
     out = out + get_bond_info(ifconfig_data) + get_tunnel_info(ifconfig_data) + get_vmnet_info(ifconfig_data)
 
-    return out           
-                
+    return out
+
 def get_network_locations():
     '''Uses system profiler to get info about the network locations'''
     cmd = ['/usr/sbin/system_profiler', 'SPNetworkLocationDataType', '-xml']
@@ -204,9 +204,9 @@ def get_additional_info(interface):
     validmtudata = bashCommand(['/usr/sbin/networksetup', '-listvalidMTUrange', interface]).decode("utf-8", errors="ignore")
     if "Valid MTU Range:" in validmtudata and "Error: The parameters were not valid" not in validmtudata:
         network["validmturange"] = re.sub('Valid MTU Range: ','', validmtudata)
-    
+
     return network
-        
+
 def get_external_ip():
     ip_address_server = str(get_pref_value('IpAddressServer', 'MunkiReport'))
 
@@ -217,13 +217,13 @@ def get_external_ip():
         return curl(ip_address_server).decode("utf-8", errors="ignore")
     except Exception:
         return ""
-    
+
 def get_bond_info(ifconfig_data):
     # Bond, James Bond
     try:
         bond_adapters = ifconfig_data
         bonds = []
-        
+
         for bond_adapter in bond_adapters:
             if "bond" in bond_adapter and ": flags=" in bond_adapter:
                 adapter = bond_adapter.split(': flags=')[0].strip()
@@ -252,7 +252,7 @@ def get_bond_info(ifconfig_data):
 
     except:
         return []
-    
+
 def get_tunnel_info(ifconfig_data):
     try:
         utun_adapters = ifconfig_data
@@ -287,7 +287,7 @@ def get_vmnet_info(ifconfig_data):
     try:
         vmnet_adapters = ifconfig_data
         vmnets = []
-        
+
         for vmnet_adapter in vmnet_adapters:
             if ("vmnet" in vmnet_adapter or "vmenet" in vmnet_adapter) and "member: " not in vmnet_adapter:
                 adapter = vmnet_adapter.split(': flags=')[0].strip()
@@ -303,7 +303,7 @@ def get_vmnet_info(ifconfig_data):
                         vmnet['ipv6ip'] = ''.join(re.sub('inet6 ','',vmnet_line.strip()).split(' ')[0]).strip()
                     elif "ether" in vmnet_line:
                         vmnet['ethernet'] = re.sub('ether ','',vmnet_line.strip()).split(' ')[0].strip().upper()
-                        
+
                 vmnets.append(vmnet)
         return vmnets
 
@@ -312,19 +312,20 @@ def get_vmnet_info(ifconfig_data):
 
 def get_airport_info():
 
-    output =  bashCommand(['/usr/sbin/system_profiler', 'SPAirPortDataType', '-xml', '-timeout', '8.4']).decode("utf-8", errors="ignore")
+    output =  bashCommand(['/usr/sbin/system_profiler', 'SPAirPortDataType', '-xml', '-timeout', '8.4'])
 
     try:
         try:
             plist = plistlib.readPlistFromString(output)
         except AttributeError as e:
             plist = plistlib.loads(output)
+
         # system_profiler xml is an array
         sp_dict = plist[0]
         obj = sp_dict['_items'][0]['spairport_airport_interfaces'][0]
     except Exception:
         return {}
-    
+
     device = {'airdrop_supported':0,'wow_supported':0}
     for item in obj:
         if item == 'spairport_airdrop_channel':
@@ -334,6 +335,7 @@ def get_airport_info():
         elif item == 'spairport_caps_wow' and obj[item] == "spairport_caps_supported":
             device['wow_supported'] = 1
         elif item == 'spairport_supported_channels':
+            print("Here")
             device['supported_channels'] = ', '.join(str(e) for e in obj[item])
         elif item == 'spairport_supported_phymodes':
             device['supported_phymodes'] = obj[item]
@@ -346,18 +348,18 @@ def get_airport_info():
         elif item == 'spairport_wireless_locale':
             device['wireless_locale'] = obj[item]
     return device
-            
+
 def get_pref_value(key, domain):
-    
+
     value = CFPreferencesCopyAppValue(key, domain)
-    
+
     if(value is not None):
         return value
     elif(value is not None and len(value) == 0 ):
         return ""
     else:
         return ""
-    
+
 def bashCommand(script):
     proc = subprocess.Popen(script, shell=False, bufsize=-1,
                             stdin=subprocess.PIPE,
@@ -432,7 +434,7 @@ def merge_two_dicts(x, y):
 
 def main():
     '''Main'''
-    
+
     # Remove old networkinfo.sh  script, if it exists
     if os.path.isfile(os.path.dirname(os.path.realpath(__file__))+'/networkinfo.sh'):
         os.remove(os.path.dirname(os.path.realpath(__file__))+'/networkinfo.sh')

@@ -50,9 +50,9 @@ $(document).on('appReady', function(){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>DHCP</td></tr>';
                         } else if(d[prop] == "bootp"){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>BOOTP</td></tr>';
-                        } else if(prop == "wireless_card_type" && d[prop] == "spairport_wireless_card_type_wifi"){
+                        } else if(prop == "wireless_card_type" && d[prop].includes("spairport_wireless_card_type_wifi")){
                            // Apple Silicon Macs report this differently
-                           rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>Wi-Fi</td></tr>';
+                           rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+d[prop].replace("spairport_wireless_card_type_wifi", "Wi-Fi")+'</td></tr>';
                             
                         // Boolean Values
                         } else if((prop == 'overrideprimary' || prop == 'ipv6coverrideprimary' || prop == 'airdrop_supported' || prop == 'wow_supported')&& d[prop] == "1"){
@@ -60,8 +60,24 @@ $(document).on('appReady', function(){
                         } else if((prop == 'overrideprimary' || prop == 'ipv6coverrideprimary' || prop == 'airdrop_supported' || prop == 'wow_supported')&& d[prop] == "0"){
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+i18n.t('no')+'</td></tr>';
 
+                        // // Format supported channels
+                        } else if (prop == 'supported_channels'){
+                           d[prop] = d[prop].replace(" 10 (2GHz)", "<br> 10 (2GHz)").replace(" 100 (5GHz)", "<br>100 (5GHz)").replace(" 128 (5GHz)", "<br>128 (5GHz)").replace(" 157 (5GHz)", "<br>157 (5GHz)").replace("36 (5GHz)", "<br><br>36 (5GHz)").replace(" 33 (6GHz)", "<br>33 (6GHz)").replace(" 65 (6GHz)", "<br>65 (6GHz)").replace(" 97 (6GHz)", "<br>97 (6GHz)").replace(" 125 (6GHz)", "<br>125 (6GHz)").replace(" 153 (6GHz)", "<br>153 (6GHz)").replace(" 181 (6GHz)", "<br>181 (6GHz)").replace(" 209 (6GHz)", "<br>209 (6GHz)").replace(" 1 (6GHz)", "<br><br>1 (6GHz)")
+                           rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+d[prop]+'</td></tr>';
+
+                        // Format DHCP DNS
+                        } else if (prop == 'dhcp_domain_name_servers'){
+                           d[prop] = d[prop].replace(", ", ",<br>")
+                           rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+d[prop]+'</td></tr>';
+
                         // Append to the client detail, only if it is an active network service and we've not already appeneded the data
                         } else if(d["status"] == "1" && ((prop == "ipv4ip" || prop == "ipv4dns" || prop == "ipv6ip" || prop == "ipv6dns" || prop == "ethernet"|| prop == "externalip") && ! clientDetail.includes(prop))){
+
+                           // Format DNS lines if more than one DNS server
+                           if (prop == "ipv4dns"){
+                               d[prop] = d[prop].replace(", ", ",<br>")
+                           }
+
                            rows = rows + '<tr><th>'+i18n.t('network.'+prop)+'</th><td>'+d[prop]+'</td></tr>';
 
                            clientDetail = clientDetail + prop
@@ -138,7 +154,7 @@ $(document).on('appReady', function(){
                             .append($('<i>')
                                 .addClass('fa fa-wifi'))
                             .append(' '+d.service)))
-                        .append($('<div style="max-width:550px;">')
+                        .append($('<div style="max-width:850px;">')
                             .append($('<table>')
                                 .addClass('table table-striped table-condensed')
                                 .append($('<tbody>')
