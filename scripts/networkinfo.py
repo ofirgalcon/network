@@ -213,10 +213,13 @@ def get_external_ip():
     if len(ip_address_server) == 0:
         ip_address_server = "https://api.ipify.org"
 
-    try:
-        return curl(ip_address_server).decode("utf-8", errors="ignore")
-    except Exception:
+    if "127.0.0.1" in ip_address_server:
         return ""
+    else:
+        try:
+            return curl(ip_address_server).decode("utf-8", errors="ignore")
+        except Exception:
+            return ""
 
 def get_bond_info(ifconfig_data):
     # Bond, James Bond
@@ -335,7 +338,6 @@ def get_airport_info():
         elif item == 'spairport_caps_wow' and obj[item] == "spairport_caps_supported":
             device['wow_supported'] = 1
         elif item == 'spairport_supported_channels':
-            print("Here")
             device['supported_channels'] = ', '.join(str(e) for e in obj[item])
         elif item == 'spairport_supported_phymodes':
             device['supported_phymodes'] = obj[item]

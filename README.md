@@ -62,6 +62,11 @@ This custom server should return only an IP address in response to a curl reques
 curl -s https://api.ipify.org
 ```
 
+To skip the external IP address, set the `IpAddressServer` key to `127.0.0.1` the below command or set it with a profile.
+```bash
+defaults write /Library/Preferences/MunkiReport.plist IpAddressServer '127.0.0.1'
+```
+
 Table Schema
 -----
 
