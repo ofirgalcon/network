@@ -11,17 +11,16 @@ class NetworkSupportedChannels extends Migration
     public function up()
     {
         $capsule = new Capsule();
-        
+
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
             // This doesn't work on some versions of MySQL
             // $table->string('supported_channels', 1024)->nullable()->change();
             $table->dropColumn('supported_channels');
         });
-        
+
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
             $table->text('supported_channels')->nullable();
         });
-
     }
 
     public function down()
@@ -30,7 +29,7 @@ class NetworkSupportedChannels extends Migration
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
             $table->dropColumn('supported_channels');
         });
-        
+
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
             $table->string('supported_channels')->nullable();
         });

@@ -9,12 +9,12 @@ $(document).on('appReady', function(){
         if( ! data ){
             // Change loading message to no data
             $('#network-msg').text(i18n.t('no_data'));
-            
+
         } else {
-            
+
             // Hide loading/no data message
             $('#network-msg').text('');
-            
+
             // Update the tab badge count
             $('#network-cnt').text(data.length);
             var skipThese = ['service'];
@@ -315,7 +315,7 @@ $(document).on('appReady', function(){
                                     .append(rows))))
                 }
             })
-        }    
+        }
     });
 });
 </script>

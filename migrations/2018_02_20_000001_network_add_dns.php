@@ -11,7 +11,7 @@ class NetworkAddDns extends Migration
     public function up()
     {
         $capsule = new Capsule();
-        
+
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
             $table->string('ipv4dns')->nullable();
             $table->string('vlans')->nullable();
@@ -40,14 +40,14 @@ class NetworkAddDns extends Migration
     {
         $capsule = new Capsule();
         $capsule::schema()->table($this->tableName, function (Blueprint $table) {
-			$table->dropColumn('ipv4dns');
-			$table->dropColumn('vlans');
-			$table->dropColumn('activemtu');
-			$table->dropColumn('validmturange');
-			$table->dropColumn('currentmedia');
-			$table->dropColumn('activemedia');
-			$table->dropColumn('searchdomain');
-			$table->dropColumn('externalip');
+            $table->dropColumn('ipv4dns');
+            $table->dropColumn('vlans');
+            $table->dropColumn('activemtu');
+            $table->dropColumn('validmturange');
+            $table->dropColumn('currentmedia');
+            $table->dropColumn('activemedia');
+            $table->dropColumn('searchdomain');
+            $table->dropColumn('externalip');
         });
     }
 }

@@ -5,6 +5,7 @@ import subprocess
 import sys
 import plistlib
 import re
+import platform
 
 from Foundation import CFPreferencesCopyAppValue
 
@@ -47,16 +48,18 @@ def get_network_info():
                 if device['service'] == "Wi-Fi" or device['service'] == "AirPort":
 
                     try:
-                        cmd = ['/usr/libexec/airportd', 'info']
-                        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                                                stdin=subprocess.PIPE,
-                                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        (output, unused_error) = proc.communicate()
-                        output = output.decode("utf-8", errors="ignore")
+                        # If less than macOS 13 (Darwin 22), use legacy method to get wifi data
+                        if getDarwinVersion() < 22:
+                            output = bashCommand(['/usr/libexec/airportd', 'info']).decode("utf-8", errors="ignore")
+                        else:
+                            output = bashCommand(['/usr/bin/wdutil', 'info']).decode("utf-8", errors="ignore")
 
                         for line in output.split('\n'):
                             if "Active PHY: " in line:
                                 device['activemedia'] = line.replace("Active PHY: ","").strip()
+                                break
+                            elif "    PHY Mode             : " in line:
+                                device['activemedia'] = "802."+(line.replace("    PHY Mode             : ","").strip())
                                 break
                     except Exception:
                         pass
@@ -169,11 +172,8 @@ def get_network_info():
 
 def get_network_locations():
     '''Uses system profiler to get info about the network locations'''
-    cmd = ['/usr/sbin/system_profiler', 'SPNetworkLocationDataType', '-xml']
-    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (output, unused_error) = proc.communicate()
+    output = bashCommand(['/usr/sbin/system_profiler', 'SPNetworkLocationDataType', '-xml'])
+
     try:
         try:
             plist = plistlib.readPlistFromString(output)
@@ -273,9 +273,11 @@ def get_tunnel_info(ifconfig_data):
                     if "inet" in utun_line and "inet6" not in utun_line:
                         utun['ipv4ip'] = ''.join(re.sub('inet ','',utun_line.strip()).split(' ')[0]).strip()
                         utun['service'] = adapter
+                        # utun['status'] = 1
                     elif "inet6" in utun_line and "fe80::" not in utun_line:
                         utun['ipv6ip'] = ''.join(re.sub('inet6 ','',utun_line.strip()).split(' ')[0]).strip()
                         utun['service'] = adapter
+                        # utun['status'] = 1
                     elif "ether" in utun_line:
                         utun['ethernet'] = re.sub('ether ','',utun_line.strip()).split(' ')[0].strip().upper()
 
@@ -350,6 +352,11 @@ def get_airport_info():
         elif item == 'spairport_wireless_locale':
             device['wireless_locale'] = obj[item]
     return device
+
+def getDarwinVersion():
+    """Returns the Darwin version."""
+    darwin_version_tuple = platform.release().split('.')
+    return int(darwin_version_tuple[0])
 
 def get_pref_value(key, domain):
 

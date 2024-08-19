@@ -10,13 +10,12 @@ use Symfony\Component\Yaml\Yaml;
  **/
 class Network_controller extends Module_controller
 {
-    
     /*** Protect methods with auth! ****/
     public function __construct()
     {
         // Store module path
         $this->module_path = dirname(__FILE__);
-        
+
         // Add local config
         configAppendFile(__DIR__ . '/config.php', 'network');
     }
@@ -46,7 +45,7 @@ class Network_controller extends Module_controller
         }
 
         $router_arr = array();
-        
+
         // See if we're being parsed a request object
         if (array_key_exists('req', $_GET)) {
             $router_arr = (array) json_decode($_GET['req']);
@@ -60,7 +59,7 @@ class Network_controller extends Module_controller
              $router_arr = [];
           }
         }
-        
+
         $out = array();
         $reportdata = new \Model();
 
@@ -119,16 +118,15 @@ class Network_controller extends Module_controller
             $obj->view('json', array('msg' => 'Not authorized'));
             return;
         }
-        
-        $queryobj = new Network_model();
-        
+
         $sql = "SELECT service, bsd_interface, `order`, status, ethernet, clientid, searchdomain, ipv4conf, ipv4ip, ipv4dns, ipv4mask, ipv4router, ipv4switchmacaddress, ipv4destaddresses, ipv6clientid, ipv6conf, ipv6ip, ipv6prefixlen, ipv6router, ipv6switchmacaddress, ipv6destaddresses, vpnservername, vpnserveraddress, overrideprimary, ipv6vpnservername, ipv6vpnserveraddress, ipv6coverrideprimary, dhcp_domain_name, dhcp_domain_name_servers, dhcp_routers, dhcp_server_identifier, dhcp_subnet_mask, location, netbiosname, workgroup, vlans, activemtu, validmturange, currentmedia, activemedia, externalip, supported_channels, supported_phymodes, wireless_card_type, firmware_version, country_code, wireless_locale, airdrop_channel, airdrop_supported, wow_supported
                         FROM network 
-                        WHERE serial_number = '$serial_number'";
+                        LEFT JOIN reportdata USING (serial_number)
+                        ".get_machine_group_filter()."
+                        AND serial_number = '$serial_number'";
 
+        $queryobj = new Network_model();
         $network_tab = $queryobj->query($sql);
-
-        $network = new Network_model;
         $obj->view('json', array('msg' => current(array('msg' => $network_tab)))); 
     }
 } // END class Network_controller
